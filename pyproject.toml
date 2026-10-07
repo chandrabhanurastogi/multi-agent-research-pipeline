@@ -1,0 +1,18 @@
+[project]
+name = "multi-agent-research-pipeline"
+version = "0.1.0"
+description = "Multi-agent research and synthesis pipeline for analyst workflows"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
