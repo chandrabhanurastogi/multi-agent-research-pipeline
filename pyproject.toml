@@ -3,16 +3,27 @@ name = "multi-agent-research-pipeline"
 version = "0.1.0"
 description = "Multi-agent research and synthesis pipeline for analyst workflows"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pydantic>=2.9",
+    "pydantic-ai-slim[google]",   # agent framework, Gemini provider only (slim = no other providers)
+    "rank-bm25",                  # keyword search over the mock corpus
+    "python-dotenv",              # load API key / model name from .env
+]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
 ]
 
+[project.scripts]
+research-briefing = "research_pipeline.app:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
