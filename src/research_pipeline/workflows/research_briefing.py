@@ -183,12 +183,15 @@ def _verify_and_revise(state: RunState, agents: Agents) -> None:
         return
     state.verdicts, state.verified = verdicts, True
     by_id = {v.finding_id: v for v in verdicts}
-    unverified = [f for f in state.draft.findings
-                  if f.id not in by_id or by_id[f.id].status is VerdictStatus.UNSUPPORTED]
-    if unverified:
+    unsupported = [f for f in state.draft.findings if f.id in by_id and by_id[f.id].status is VerdictStatus.UNSUPPORTED]
+    unchecked = [f for f in state.draft.findings if f.id not in by_id]
+    if unsupported:
         _issue(state, IssueKind.UNVERIFIED_FINDING, "verify", Severity.REVIEW,
-               f"{len(unverified)} statement(s) could not be verified against the sources and were excluded "
+               f"{len(unsupported)} statement(s) were not backed by the quoted sources and were excluded "
                "from key findings.")
+    if unchecked:  # no verdict returned: kept, but scored as not verified (capped at Weakly supported)
+        _issue(state, IssueKind.UNVERIFIED_FINDING, "verify", Severity.REVIEW,
+               f"{len(unchecked)} statement(s) were not checked by the reviewer; they are shown as weakly supported.")
 
 
 def _score(state: RunState, as_of: date) -> None:

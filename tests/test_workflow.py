@@ -170,3 +170,15 @@ def test_every_step_on_one_fallback_model_is_still_flagged(corpus):
                               verifier=via_fallback(verifier_saying(VerdictStatus.SUPPORTED))),
                 corpus, as_of=AS_OF)
     assert IssueKind.MODEL_FALLBACK in kinds(state)
+
+
+def test_finding_without_a_verdict_is_kept_but_weak_and_flagged(corpus):
+    def verifier_skipping_last(draft, claims, sources):
+        result = verifier_saying(VerdictStatus.SUPPORTED)(draft, claims, sources)
+        return result.model_copy(update={"output": result.output.model_copy(update={"verdicts": result.output.verdicts[:-1]})})
+
+    state = run(QUERY, agents(verifier=verifier_skipping_last), corpus, as_of=AS_OF)
+    last = state.draft.findings[-1].id
+    [score] = [s for s in state.finding_scores if s.finding_id == last]
+    assert score.score <= 0.39 and "NOT verified" in score.explanation
+    assert any("not checked by the reviewer" in i.message for i in state.issues)

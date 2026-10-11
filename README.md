@@ -24,7 +24,7 @@ python -m research_pipeline "Give me an overview of the dry bulk shipping market
 Output: `runs/<run_id>/briefing.md` (for the analyst) and `runs/<run_id>/run.json` (full audit trail). A run takes about a minute and makes at most about 10 agent calls (fewer if it stops early), plus any validation retries and fallback attempts.
 
 ```bash
-pytest                          # 84 tests, offline, no API key needed (fake LLM)
+pytest                          # 85 tests, offline, no API key needed (fake LLM)
 python scripts/check_llm.py     # one real call: checks key and model
 ```
 
@@ -157,7 +157,7 @@ Design points, each found by running the system and fixed with a test:
 
 ## 6. Testing
 
-84 tests run offline in well under a second:
+85 tests run offline in well under a second:
 - **Policies** (search, trust boundary, sufficiency, confidence) are pure functions — tested directly, including the worked confidence examples.
 - **Agents** are tested with Pydantic AI's `FunctionModel` playing the LLM: what each agent is shown, and the retry-on-invalid-output behaviour.
 - **The workflow** receives its agents as a bundle (dependency injection), so every branch — fallback plan, failed research, short-circuit, failed synthesis, failed verification, exactly one revision, fallback-model warning, bugs not swallowed — is tested with plain fake functions.
@@ -202,7 +202,7 @@ src/research_pipeline/
 └── domain/               every type: research records, LLM contracts, run state, briefing
 data/corpus.json          the mock document library
 examples/                 committed example runs
-tests/                    84 offline tests
+tests/                    85 offline tests
 scripts/                  connectivity check and step-by-step previews
 docs/                     architecture decisions and trade-offs
 ```
