@@ -4,8 +4,8 @@
     research-briefing "..."                     (same, via the script in pyproject.toml)
 
 Writes runs/<run_id>/briefing.md (for the analyst) and runs/<run_id>/run.json
-(full audit trail), and prints where they are. Exit code 1 only if no briefing
-could be produced.
+(full audit trail), and prints where they are. Exit code 1 if no briefing could
+be produced, 2 for invalid input or configuration.
 """
 
 import argparse
@@ -15,7 +15,7 @@ from pathlib import Path
 from research_pipeline.agents.runner import configured_model
 from research_pipeline.agents.team import build_agents
 from research_pipeline.domain.output.briefing import RunStatus
-from research_pipeline.domain.state.workflow_state import Severity
+from research_pipeline.domain.state.workflow_state import QUERY_MAX_CHARS, QUERY_MIN_CHARS, Severity
 from research_pipeline.llm.client import LLMConfigError, fallback_model_names, model_name
 from research_pipeline.memory.audit import DEFAULT_RUNS_DIR, run_dir, save_run
 from research_pipeline.reporting.briefing_writer import build_briefing, render_markdown
@@ -29,6 +29,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--runs-dir", type=Path, default=DEFAULT_RUNS_DIR, help="where to write outputs")
     args = parser.parse_args(argv)
 
+    query = args.query.strip()
+    if not QUERY_MIN_CHARS <= len(query) <= QUERY_MAX_CHARS:  # input check before any work or cost
+        print(f"Please ask a question between {QUERY_MIN_CHARS} and {QUERY_MAX_CHARS} characters "
+              f"(got {len(query)}).", file=sys.stderr)
+        return 2
+
     try:  # fail fast on configuration, before any work
         model = configured_model()
         models = " -> ".join([model_name(), *fallback_model_names()])
@@ -36,10 +42,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Configuration error: {e}", file=sys.stderr)
         return 2
 
-    print(f"Researching: {args.query}\n(using {models}; this takes about a minute)\n")
+    print(f"Researching: {query}\n(using {models}; this takes about a minute)\n")
     crashed = None
     try:
-        state = run(args.query, build_agents(model), Corpus.load(), model_name=models)
+        state = run(query, build_agents(model), Corpus.load(), model_name=models)
     except WorkflowCrashed as e:  # a bug: save what we have, then still show the error
         state, crashed = e.state, e
 

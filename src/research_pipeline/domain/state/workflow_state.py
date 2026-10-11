@@ -16,6 +16,10 @@ from research_pipeline.domain.research.scores import FindingScore, OverallScore
 from research_pipeline.domain.research.source import Source
 
 
+QUERY_MIN_CHARS = 5
+QUERY_MAX_CHARS = 1000
+
+
 class StepStatus(StrEnum):
     OK = "ok"
     DEGRADED = "degraded"  # step failed, a fallback was used, run continued
@@ -95,7 +99,7 @@ class RunState(BaseModel):
 
     # identity
     run_id: str
-    query: str = Field(min_length=5, max_length=1000)
+    query: str = Field(min_length=QUERY_MIN_CHARS, max_length=QUERY_MAX_CHARS)
     model_name: str  # configured primary model (+ fallbacks); per-step actual model is in trace
     prompt_version: str = "unknown"  # llm/prompts.py PROMPT_VERSION, so runs are comparable
     started_at: datetime
