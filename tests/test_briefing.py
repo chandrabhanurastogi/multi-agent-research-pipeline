@@ -68,3 +68,12 @@ def test_cli_writes_briefing_and_audit_files(monkeypatch, tmp_path, capsys):
     [run_folder] = tmp_path.iterdir()
     assert {p.name for p in run_folder.iterdir()} == {"briefing.md", "run.json"}
     assert "Briefing:" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("query", ["hi", "   ", "x" * 1001])
+def test_cli_rejects_bad_query_before_any_work(monkeypatch, tmp_path, capsys, query):
+    called = []
+    monkeypatch.setattr(app, "configured_model", lambda: called.append("model"))
+    assert app.main([query, "--runs-dir", str(tmp_path)]) == 2
+    assert "Please ask a question" in capsys.readouterr().err
+    assert called == [] and list(tmp_path.iterdir()) == []  # no model built, nothing written

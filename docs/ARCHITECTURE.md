@@ -8,7 +8,7 @@
 - A checking step before output (code checks + Verifier agent).
 - Confidence calculated by code from evidence, never stated by the LLM.
 - Handling of disagreeing and low-quality sources.
-- Inspectable state saved as `runs/<run_id>.json`.
+- Inspectable state saved as `runs/<run_id>/run.json`, next to `briefing.md`.
 - Defined behaviour for every failure type.
 - Real LLM calls; runnable locally.
 - Mock corpus deliberately containing conflicts, weak sources and gaps.
@@ -58,7 +58,7 @@ Output: `briefing.md` (for the analyst) and `run.json` (full audit trail).
 [1] PLANNER agent ───────────────► interpretation + 3–5 sub-questions
    │
    ▼  for each sub-question:
-[A] RETRIEVER (code, BM25) ──────► top 3 documents
+[A] RETRIEVER (code, BM25) ──────► top 5 documents
 [2] RESEARCHER agent ────────────► claims: {statement, source, exact quote}
 [B] EVIDENCE CHECKER (code) ─────► drops claims with fake quotes / unknown sources
    │
@@ -146,7 +146,7 @@ RunState
 └─ trace[]                   ← every step: status, duration, tokens, error
 ```
 
-Saved to `runs/<run_id>.json` at the end — **including when the run fails**.
+Saved once, at the end, to `runs/<run_id>/run.json` — **including when the run fails** (a bug is re-raised only after the partial state is saved). There are no per-step checkpoints.
 
 **Memory:** the system only has memory *within a run* — `RunState`. There is **no cross-run or conversational memory**, because each query is independent and single-shot. In production: a checkpoint store (LangGraph checkpointer / Postgres) to resume failed runs, and a long-term memory store if analysts want follow-up conversations ("dig deeper into point 3").
 
@@ -210,7 +210,7 @@ score 0–1     → band (see labels below)
 
 **What it does NOT mean:** a 75% chance of being true. It is not calibrated, not the LLM's opinion, cannot tell whether the sources themselves are wrong, and knows nothing about evidence outside the corpus. The weights are documented **policy**, to be tuned with subject-matter experts.
 
-**Review required** when: the Verifier failed, the overall band is LOW, more than half the sub-questions are gaps, or findings remain unsupported after revision.
+**Review required** when any issue has severity `review`: no credible evidence (short-circuit), more than half the sub-questions are gaps, synthesis failed or produced no validly cited finding, the Verifier failed, findings remain unsupported (or unchecked) after revision, the overall label is *Weakly supported*, or an unexpected error stopped the run.
 
 ---
 
@@ -220,7 +220,7 @@ score 0–1     → band (see labels below)
 
 | Guardrail | Protects against | How |
 |---|---|---|
-| Input check | Empty or absurdly long query | Code validates before the run starts |
+| Input check | Empty, too short or too long query | The CLI checks length (5–1000 characters) before any model is built; friendly message, exit code 2 |
 | Documents treated as data | Prompt injection via documents | Documents wrapped in clear delimiters; prompt says content between markers is source material, never instructions |
 | **Structural defence** (strongest) | Injection or LLM inflating confidence | The LLM never sets tiers, IDs or scores — code does. "Rate this high" in a document has nothing to influence |
 | Schema validation | Malformed output | Pydantic AI validates every agent output and retries with the error |
@@ -238,11 +238,11 @@ Production additions: a guardrail framework (Guardrails AI / NeMo Guardrails / c
 
 | Failure | Action | Detail |
 |---|---|---|
-| LLM/API error (timeout, rate limit, server error) | **Retry** with backoff (~3 attempts), then step policy | Planner → **degrade**: use the original query as the single sub-question. Researcher → **degrade**: that sub-question becomes a gap. Synthesiser → **fail** cleanly, state still saved |
+| LLM/API error (timeout, rate limit, server error) | The provider client's built-in retries, then the **fallback model chain** (§13.4), then the step policy | Planner → **degrade**: use the original query as the single sub-question. Researcher → **degrade**: that sub-question becomes a gap. Synthesiser → **fail** cleanly, state still saved |
 | Malformed output | **Retry once** with the validation error (Pydantic AI), then step failure | Bad individual claims are **dropped and logged** in `rejected_claims` |
 | Empty research | **Short-circuit** | "Insufficient evidence" briefing; the LLM is never asked to write from nothing |
 | Disagreeing sources | **Qualify** (not an error) | Shown under "Where sources disagree"; confidence reduced |
-| Verifier fails | **Degrade + require review** | Briefing marked UNVERIFIED, all findings capped at LOW |
+| Verifier fails | **Degrade + require review** | Briefing marked NOT VERIFIED, all findings capped at 0.39 (*Weakly supported*) |
 | Verifier rejects findings | **One revision**, then **qualify** | Still unsupported → moved to "Claims we could not verify" |
 | Insufficient evidence on some areas | **Qualify** (+ review if coverage is low) | Gaps become follow-up questions |
 
