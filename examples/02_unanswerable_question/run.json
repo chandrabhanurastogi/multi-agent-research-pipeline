@@ -1,0 +1,248 @@
+{
+  "run_id": "20261011-045811-5794f9",
+  "query": "What are the main operational risks for offshore wind farm developers in the North Sea?",
+  "model_name": "google:gemini-3.8-flash -> google:gemini-3.5-flash -> google:gemini-3.1-flash-lite",
+  "prompt_version": "2026-10-11.3",
+  "started_at": "2026-10-11T04:58:11.759832",
+  "status": "insufficient_evidence",
+  "interpretation": {
+    "restated_question": "What are the primary operational and maintenance risks currently facing offshore wind farm developers operating in the North Sea?",
+    "scope": "Geographic scope is the North Sea; time horizon is current (2026); focus is on operational phase risks.",
+    "assumptions": [
+      "The focus is on operational risks (post-construction/maintenance phase) rather than development or construction risks.",
+      "The North Sea is defined as the region encompassing the UK, Norwegian, Dutch, German, and Danish sectors."
+    ]
+  },
+  "sub_questions": [
+    {
+      "id": "SQ1",
+      "question": "What are the primary technical and mechanical failure risks for offshore wind assets in the North Sea environment?",
+      "search_terms": [
+        "offshore wind turbine reliability",
+        "mechanical failure rates North Sea",
+        "component degradation offshore wind",
+        "O&M technical challenges"
+      ],
+      "rationale": "Understanding hardware reliability and failure rates is critical to assessing operational downtime and maintenance costs."
+    },
+    {
+      "id": "SQ2",
+      "question": "How do harsh North Sea weather conditions and climate variability impact operational uptime and maintenance logistics?",
+      "search_terms": [
+        "North Sea weather impact wind farm operations",
+        "offshore wind maintenance accessibility",
+        "weather downtime offshore wind",
+        "climate change impact offshore wind operations"
+      ],
+      "rationale": "Environmental factors are the most significant external constraint on accessing and servicing offshore wind farms."
+    },
+    {
+      "id": "SQ3",
+      "question": "What are the current supply chain and labor constraints affecting the maintenance and repair of North Sea offshore wind farms?",
+      "search_terms": [
+        "offshore wind supply chain constraints 2026",
+        "offshore wind vessel availability O&M",
+        "skilled labor shortage offshore wind sector",
+        "spare parts logistics offshore wind"
+      ],
+      "rationale": "The availability of specialized vessels, spare parts, and skilled technicians directly dictates the speed and cost of operational recovery."
+    },
+    {
+      "id": "SQ4",
+      "question": "What regulatory and grid-related operational risks do developers face in the North Sea?",
+      "search_terms": [
+        "offshore wind grid connection risks",
+        "North Sea maritime regulation compliance",
+        "offshore wind operational regulatory challenges",
+        "grid curtailment risks offshore wind"
+      ],
+      "rationale": "Operational risks extend beyond physical assets to include grid integration issues and compliance with evolving maritime and energy regulations."
+    }
+  ],
+  "documents": {
+    "S09": {
+      "source_id": "S09",
+      "title": "Trade Route Disruptions and Bulk Shipping",
+      "publisher": "Seatrade Observer",
+      "tier": "B",
+      "primary_origin": "S09",
+      "published": "2026-05-30",
+      "text": "Red Sea diversions have lengthened average voyage distances, increasing tonne-miles demand. Low water levels at the Panama Canal have also forced some bulk carriers onto longer routes. A reopening of these routes would release capacity back into the market."
+    },
+    "S03": {
+      "source_id": "S03",
+      "title": "Technical Note: Fleet Efficiency Regulations and Operating Speeds",
+      "publisher": "International Maritime Standards Authority",
+      "tier": "A",
+      "primary_origin": "S03",
+      "published": "2026-01-20",
+      "text": "The EEXI and CII rules are expected to lead many older vessels to reduce operating speeds, lowering effective fleet capacity. Owners of vessels rated D or E under CII must submit corrective action plans. Slower steaming reduces the number of voyages each ship can complete per year."
+    },
+    "S10": {
+      "source_id": "S10",
+      "title": "Re: Where are bulker rates heading??",
+      "publisher": "ShipTalk Forum (anonymous user)",
+      "tier": "C",
+      "primary_origin": "S10",
+      "published": "2026-06-12",
+      "text": "Trust me, rates will triple next year, guaranteed. Everyone who is not buying bulker stocks now will regret it."
+    },
+    "S06": {
+      "source_id": "S06",
+      "title": "Shipping Sector Note: Capesize Outlook",
+      "publisher": "Northgate Capital",
+      "tier": "B",
+      "primary_origin": "S06",
+      "published": "2026-04-22",
+      "text": "Continued contraction in Chinese property construction is weighing on steel demand. As a result, we expect average Capesize rates to fall in 2027 compared with 2026. Infrastructure spending provides only partial offset."
+    },
+    "S04": {
+      "source_id": "S04",
+      "title": "Weekly Dry Bulk Market Report",
+      "publisher": "Harbourline Shipbrokers",
+      "tier": "B",
+      "primary_origin": "S04",
+      "published": "2026-06-05",
+      "text": "The orderbook stands at 7% of the fleet, the lowest level in over two decades. With limited new supply, we expect rates to firm through 2027. Longer trade routes are adding to tonne-miles, which absorbs available capacity."
+    },
+    "S11": {
+      "source_id": "S11",
+      "title": "Dry Bulk Outlook 2019",
+      "publisher": "Harbourline Shipbrokers",
+      "tier": "B",
+      "primary_origin": "S11",
+      "published": "2019-02-01",
+      "text": "The orderbook stands at 12% of the fleet, and deliveries over the next two years will add meaningful new capacity. We expect supply growth to outpace demand growth in 2019."
+    },
+    "S05": {
+      "source_id": "S05",
+      "title": "Dry Bulk Supply Outlook",
+      "publisher": "Meridian Maritime Research",
+      "tier": "B",
+      "primary_origin": "S05",
+      "published": "2026-05-18",
+      "text": "Our fleet database shows an orderbook-to-fleet ratio of roughly 10%, higher than commonly cited figures once smaller handysize orders are included. Newbuilding deliveries are set to rise in 2027 as yards complete contracts signed in 2024 and 2025."
+    }
+  },
+  "claims": [],
+  "rejected_claims": [],
+  "coverage": {
+    "SQ1": "gap",
+    "SQ2": "gap",
+    "SQ3": "gap",
+    "SQ4": "gap"
+  },
+  "draft": null,
+  "revision_count": 0,
+  "verdicts": [],
+  "verified": false,
+  "finding_scores": [],
+  "overall": null,
+  "issues": [
+    {
+      "kind": "coverage_gap",
+      "step": "sufficiency",
+      "severity": "review",
+      "message": "No evidence found for: What are the primary technical and mechanical failure risks for offshore wind assets in the North Sea environment?; How do harsh North Sea weather conditions and climate variability impact operational uptime and maintenance logistics?; What are the current supply chain and labor constraints affecting the maintenance and repair of North Sea offshore wind farms?; What regulatory and grid-related operational risks do developers face in the North Sea?"
+    },
+    {
+      "kind": "no_evidence",
+      "step": "sufficiency",
+      "severity": "review",
+      "message": "No credible (tier A/B, recent) evidence was found, so no briefing was written."
+    },
+    {
+      "kind": "model_fallback",
+      "step": "run",
+      "severity": "warning",
+      "message": "5 of 5 AI steps were answered by a fallback model because the preferred model was unavailable (models used: gemini-3.1-flash-lite). Quality may be lower than usual."
+    }
+  ],
+  "trace": [
+    {
+      "step": "plan",
+      "status": "ok",
+      "started_at": "2026-10-11T04:58:11.759852",
+      "duration_ms": 5185,
+      "attempts": 1,
+      "input_tokens": 802,
+      "output_tokens": 480,
+      "model": "gemini-3.1-flash-lite",
+      "fallback_used": true,
+      "error": null
+    },
+    {
+      "step": "research:SQ1",
+      "status": "ok",
+      "started_at": "2026-10-11T04:58:16.946255",
+      "duration_ms": 3251,
+      "attempts": 1,
+      "input_tokens": 1067,
+      "output_tokens": 13,
+      "model": "gemini-3.1-flash-lite",
+      "fallback_used": true,
+      "error": null
+    },
+    {
+      "step": "research:SQ2",
+      "status": "ok",
+      "started_at": "2026-10-11T04:58:20.198066",
+      "duration_ms": 1078,
+      "attempts": 1,
+      "input_tokens": 707,
+      "output_tokens": 13,
+      "model": "gemini-3.1-flash-lite",
+      "fallback_used": true,
+      "error": null
+    },
+    {
+      "step": "research:SQ3",
+      "status": "ok",
+      "started_at": "2026-10-11T04:58:21.276568",
+      "duration_ms": 3373,
+      "attempts": 1,
+      "input_tokens": 1100,
+      "output_tokens": 13,
+      "model": "gemini-3.1-flash-lite",
+      "fallback_used": true,
+      "error": null
+    },
+    {
+      "step": "research:SQ4",
+      "status": "ok",
+      "started_at": "2026-10-11T04:58:24.650879",
+      "duration_ms": 5916,
+      "attempts": 1,
+      "input_tokens": 807,
+      "output_tokens": 13,
+      "model": "gemini-3.1-flash-lite",
+      "fallback_used": true,
+      "error": null
+    },
+    {
+      "step": "synthesise",
+      "status": "skipped",
+      "started_at": "2026-10-11T04:58:30.567106",
+      "duration_ms": 0,
+      "attempts": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "model": null,
+      "fallback_used": false,
+      "error": null
+    },
+    {
+      "step": "verify",
+      "status": "skipped",
+      "started_at": "2026-10-11T04:58:30.567129",
+      "duration_ms": 0,
+      "attempts": 1,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "model": null,
+      "fallback_used": false,
+      "error": null
+    }
+  ],
+  "review_required": true
+}

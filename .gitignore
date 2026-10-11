@@ -11,6 +11,7 @@ env/
 # Environment / secrets
 .env
 .env.*
+!.env.example
 
 # Testing
 .pytest_cache/
@@ -20,6 +21,7 @@ htmlcov/
 # IDE
 .idea/
 .vscode/
+*.iml
 
 # OS
 .DS_Store
@@ -29,6 +31,8 @@ dist/
 build/
 *.egg-info/
 
-# Local runtime output
-logs/
-output/
+# Local runtime output (leading "/" = top-level folder only, so src/.../domain/output/ is NOT ignored)
+/logs/
+/output/
+# Pipeline run output (examples/ is committed instead)
+/runs/
