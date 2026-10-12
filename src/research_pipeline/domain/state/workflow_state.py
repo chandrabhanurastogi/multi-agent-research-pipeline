@@ -109,8 +109,8 @@ class RunState(BaseModel):
     interpretation: Interpretation | None = None  # Planner
     sub_questions: list[SubQuestion] = Field(default_factory=list)  # Planner
     documents: dict[str, Source] = Field(default_factory=dict)  # search tool
-    claims: list[Claim] = Field(default_factory=list)  # Researcher + evidence policy
-    rejected_claims: list[RejectedClaim] = Field(default_factory=list)  # evidence policy
+    claims: list[Claim] = Field(default_factory=list)  # Researcher, after the trust boundary
+    rejected_claims: list[RejectedClaim] = Field(default_factory=list)  # trust boundary (with reasons)
     coverage: dict[str, Coverage] = Field(default_factory=dict)  # sufficiency policy
     draft: Draft | None = None  # Synthesiser
     revision_count: int = Field(default=0, ge=0, le=1)  # bounded loop: max 1 revision
