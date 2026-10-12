@@ -32,6 +32,32 @@ Output: `runs/<run_id>/briefing.md` (for the analyst) and `runs/<run_id>/run.jso
 
 > **Free-tier quota:** `gemini-3.8-flash` allows ~20 requests/day on the free tier — about 2–3 full runs. When it is exhausted (or overloaded), the fallback chain in `.env` moves to cheaper models, and the briefing says so. For a live demo, use a fresh quota or a billed key.
 
+### Trying the agents one at a time
+
+Each script runs one stage against the real model and prints its intermediate results. The query is optional (each script has a default). They make the same calls as the workflow, without its failure handling or briefing.
+
+```bash
+python scripts/try_planner.py "What are the main risks in lithium mining?"
+#   Planner: interpretation, assumptions, sub-questions, and which documents search finds for each
+
+python scripts/try_researcher.py "What are the main risks in lithium mining?"
+#   Planner → search → Researcher per sub-question → trust boundary:
+#   accepted claims, rejected claims with reasons; saves runs/preview_research.json
+
+python scripts/try_synthesis.py
+#   Synthesiser → Verifier → at most one revision → confidence scores,
+#   reusing the research saved above (run try_researcher.py first; re-run this as often as you like)
+
+python scripts/try_workflow.py "What are the main risks in lithium mining?"
+#   the full workflow with its per-step trace table (status, time, tokens, model)
+```
+
+Offline, without a key, each agent is tested with a fake LLM:
+
+```bash
+pytest tests/test_agents_planner.py tests/test_agents_researcher.py tests/test_agents_synthesiser_verifier.py
+```
+
 ---
 
 ## 1. Architecture
