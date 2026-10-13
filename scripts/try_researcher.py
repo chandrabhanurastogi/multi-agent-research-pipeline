@@ -1,7 +1,7 @@
 """Planner -> search -> Researcher -> trust boundary, on a real query.
 
     python scripts/try_researcher.py
-    python scripts/try_researcher.py "What are the main risks in lithium mining?"
+    python scripts/try_researcher.py "How do emissions rules affect dry bulk fleet supply?"
 
 Not part of the pipeline: a step-by-step preview of research. Saves its results for
 scripts/try_synthesis.py. The workflow makes
@@ -14,7 +14,8 @@ from pathlib import Path
 
 from research_pipeline.agents.planner import Planner
 from research_pipeline.agents.researcher import Researcher
-from research_pipeline.agents.runner import AGENT_ERRORS, configured_model
+from fake_llm import configured_model  # LLM_MODEL=fake -> no API calls
+from research_pipeline.agents.runner import AGENT_ERRORS
 from research_pipeline.domain.research.plan import SubQuestion
 from research_pipeline.domain.state.workflow_state import RunState
 from research_pipeline.llm.client import model_name
@@ -22,7 +23,8 @@ from research_pipeline.policies.trust_boundary import check_claims
 from research_pipeline.tools.search import Corpus
 
 DEFAULT_QUERY = "Give me an overview of the dry bulk shipping market and its main risk drivers."
-PREVIEW_FILE = Path("runs/preview_research.json")  # read by scripts/try_synthesis.py
+ROOT = Path(__file__).resolve().parents[1]  # repo root, so the script works from any directory
+PREVIEW_FILE = ROOT / "runs" / "preview_research.json"  # read by scripts/try_synthesis.py
 
 
 def main() -> None:

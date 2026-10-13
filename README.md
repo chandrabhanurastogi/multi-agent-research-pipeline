@@ -37,10 +37,10 @@ Output: `runs/<run_id>/briefing.md` (for the analyst) and `runs/<run_id>/run.jso
 Each script runs one stage against the real model and prints its intermediate results. The query is optional (each script has a default). They make the same calls as the workflow, without its failure handling or briefing.
 
 ```bash
-python scripts/try_planner.py "What are the main risks in lithium mining?"
+python scripts/try_planner.py "How do emissions rules affect dry bulk fleet supply?"
 #   Planner: interpretation, assumptions, sub-questions, and which documents search finds for each
 
-python scripts/try_researcher.py "What are the main risks in lithium mining?"
+python scripts/try_researcher.py "How do emissions rules affect dry bulk fleet supply?"
 #   Planner → search → Researcher per sub-question → trust boundary:
 #   accepted claims, rejected claims with reasons; saves runs/preview_research.json
 
@@ -48,9 +48,20 @@ python scripts/try_synthesis.py
 #   Synthesiser → Verifier → at most one revision → confidence scores,
 #   reusing the research saved above (run try_researcher.py first; re-run this as often as you like)
 
-python scripts/try_workflow.py "What are the main risks in lithium mining?"
+python scripts/try_workflow.py "How do emissions rules affect dry bulk fleet supply?"
 #   the full workflow with its per-step trace table (status, time, tokens, model)
 ```
+
+To run the same scripts offline (no key, no quota), set `LLM_MODEL=fake`. A scripted fake model ([`scripts/fake_llm.py`](scripts/fake_llm.py)) answers instead of Gemini; everything else runs for real. Its answers include one invented quote per Researcher call and one overreaching finding, so the trust boundary rejects claims and the single revision runs:
+
+```bash
+LLM_MODEL=fake python scripts/try_planner.py
+LLM_MODEL=fake python scripts/try_researcher.py
+LLM_MODEL=fake python scripts/try_synthesis.py
+LLM_MODEL=fake python scripts/try_workflow.py
+```
+
+To step through in a debugger, add `LLM_MODEL=fake` to the run configuration's environment variables.
 
 Offline, without a key, each agent is tested with a fake LLM:
 

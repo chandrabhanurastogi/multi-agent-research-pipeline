@@ -1,27 +1,27 @@
 """Run the real workflow end to end and print its trace table (the app prints a summary instead).
 
     python scripts/try_workflow.py
-    python scripts/try_workflow.py "What are the main risks in lithium mining?"
+    python scripts/try_workflow.py "How do emissions rules affect dry bulk fleet supply?"
 """
 
 import sys
 from pathlib import Path
 
-from research_pipeline.agents.runner import configured_model
+from fake_llm import configured_model, model_label  # LLM_MODEL=fake -> no API calls
 from research_pipeline.agents.team import build_agents
-from research_pipeline.llm.client import fallback_model_names, model_name
 from research_pipeline.tools.search import Corpus
 from research_pipeline.workflows.research_briefing import run
 
+ROOT = Path(__file__).resolve().parents[1]  # repo root, so the script works from any directory
 DEFAULT_QUERY = "Give me an overview of the dry bulk shipping market and its main risk drivers."
 
 
 def main() -> None:
     query = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_QUERY
-    models = " -> ".join([model_name(), *fallback_model_names()])
+    models = model_label()
     state = run(query, build_agents(configured_model()), Corpus.load(), model_name=models)
 
-    out = Path("runs") / f"{state.run_id}.json"
+    out = ROOT / "runs" / f"{state.run_id}.json"
     out.parent.mkdir(exist_ok=True)
     out.write_text(state.model_dump_json(indent=2))
 
