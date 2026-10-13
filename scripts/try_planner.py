@@ -1,7 +1,7 @@
 """Run the Planner on a real query and show what search finds for each sub-question.
 
     python scripts/try_planner.py
-    python scripts/try_planner.py "What are the main risks in lithium mining?"
+    python scripts/try_planner.py "How do emissions rules affect dry bulk fleet supply?"
 
 Not part of the pipeline: a step-by-step preview of the Planner. The workflow makes
 the same calls in the same order.
@@ -11,7 +11,7 @@ import sys
 from datetime import date
 
 from research_pipeline.agents.planner import Planner
-from research_pipeline.agents.runner import configured_model
+from fake_llm import configured_model  # LLM_MODEL=fake -> no API calls
 from research_pipeline.tools.search import Corpus
 
 DEFAULT_QUERY = "Give me an overview of the dry bulk shipping market and its main risk drivers."

@@ -7,10 +7,11 @@ Not part of the pipeline: a step-by-step preview of writing and checking. The wo
 the same calls in the same order, with failure handling and a trace.
 """
 
+import sys
 from datetime import date
 from pathlib import Path
 
-from research_pipeline.agents.runner import configured_model
+from fake_llm import configured_model  # LLM_MODEL=fake -> no API calls
 from research_pipeline.agents.synthesiser import Synthesiser
 from research_pipeline.agents.verifier import Verifier
 from research_pipeline.domain.research.findings import Draft, Verdict, VerdictStatus
@@ -19,7 +20,8 @@ from research_pipeline.policies.confidence import score_findings, score_overall
 from research_pipeline.policies.sufficiency import assess_coverage
 from research_pipeline.policies.trust_boundary import check_draft, check_verdicts
 
-PREVIEW_FILE = Path("runs/preview_research.json")
+ROOT = Path(__file__).resolve().parents[1]  # repo root, so the script works from any directory
+PREVIEW_FILE = ROOT / "runs" / "preview_research.json"
 
 
 def show(draft: Draft, verdicts: list[Verdict], problems: list[str], title: str) -> None:
@@ -40,7 +42,13 @@ def show(draft: Draft, verdicts: list[Verdict], problems: list[str], title: str)
 
 
 def main() -> None:
+    if not PREVIEW_FILE.exists():
+        sys.exit(f"{PREVIEW_FILE} not found: run scripts/try_researcher.py first.")
     state = RunState.model_validate_json(PREVIEW_FILE.read_text())
+    if not state.claims:
+        # The workflow stops here too (insufficient evidence): there is nothing to write from.
+        sys.exit(f"The saved research for '{state.query}' has no accepted claims, so there is nothing to "
+                 "synthesise.\nRe-run scripts/try_researcher.py with a question the corpus covers (dry bulk shipping).")
     as_of, sources, claim_ids = date.today(), state.documents, {c.id for c in state.claims}
     model = configured_model()
     synthesiser, verifier = Synthesiser(model), Verifier(model)
