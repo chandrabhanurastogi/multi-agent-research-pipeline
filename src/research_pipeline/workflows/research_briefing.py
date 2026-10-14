@@ -134,9 +134,15 @@ def _research(state: RunState, agents: Agents, corpus: Corpus) -> None:
 
 def _sufficient(state: RunState, as_of: date) -> bool:
     state.coverage = assess_coverage(state.sub_questions, state.claims, state.documents, as_of)
+
+
+    # Creates a new list containing only the SubQuestion objects that have zero evidence.\
     gaps = [sq for sq in state.sub_questions if state.coverage[sq.id] is Coverage.GAP]
     if gaps:
+        # If MORE THAN HALF the questions have zero evidence, flag for human review
         severity = Severity.REVIEW if len(gaps) * 2 > len(state.sub_questions) else Severity.WARNING
+
+        # Log an issue listing the exact unanswered questions
         _issue(state, IssueKind.COVERAGE_GAP, "sufficiency", severity,
                "No evidence found for: " + "; ".join(sq.question for sq in gaps))
     if has_credible_evidence(state.claims, state.documents, as_of):

@@ -22,11 +22,19 @@ from research_pipeline.policies.source_quality import is_credible
 
 def credible_origins(claims: list[Claim], sources: dict[str, Source], as_of: date) -> set[str]:
     """Distinct primary_origins among the credible sources behind these claims."""
-    return {
-        sources[c.source_id].primary_origin
-        for c in claims
-        if is_credible(sources[c.source_id], as_of)
-    }
+    origins = set()  # A set automatically ignores duplicates!
+
+    for c in claims:
+        # 1. Look up the document that this claim came from
+        doc = sources[c.source_id]
+
+        # 2. Check if this document is high quality (Tier A/B) and fresh (< 3 years old)
+        if is_credible(doc, as_of):
+            # 3. Add the root source name to our set
+            origins.add(doc.primary_origin)
+
+    return origins
+
 
 
 def assess_coverage(
@@ -38,8 +46,13 @@ def assess_coverage(
     """Label every sub-question covered / thin / gap."""
     coverage: dict[str, Coverage] = {}
     for sq in sub_questions:
+        # STEP 1: Filter claims that belong to this sub-question
         sq_claims = [c for c in claims if c.sub_question_id == sq.id]
+
+        # STEP 2: Count how many independent, credible origins back these claims
         n_origins = len(credible_origins(sq_claims, sources, as_of))
+
+        # STEP 3: Assign coverage label based on strict criteria
         if not sq_claims:
             coverage[sq.id] = Coverage.GAP
         elif n_origins >= 2:
