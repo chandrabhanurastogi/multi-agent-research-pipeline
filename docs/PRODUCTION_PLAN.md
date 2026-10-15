@@ -12,8 +12,8 @@ How the take-home pipeline becomes a production service. This is the resume poin
 | Phase | Step | State |
 |---|---|---|
 | 0 | Freeze take-home on branch + tag | ✅ done (2026-10-14, `6f9ad39`) |
-| A | A0 Non-functional requirements and ADRs | ⬜ next |
-| A | A1 Project foundation | ⬜ |
+| A | A0 Non-functional requirements and ADRs | ✅ done (2026-10-15): [NFR.md](NFR.md), [adr/](adr/) |
+| A | A1 Project foundation | ⬜ next |
 | A | A2 Service shape: API, worker, queue, auth | ⬜ |
 | A | A3 Persistence: Postgres + object storage | ⬜ |
 | A | A4 LLM gateway | ⬜ |
@@ -76,10 +76,10 @@ Each step: one or more small commits on `main`; all tests green; `README.md` and
 
 ### A0. Non-functional requirements and ADRs
 Write down what "production-ready" means before building it.
-- `docs/NFR.md`: target latency per run (e.g. p95 < 3 min), availability, max cost per run, concurrent runs, data retention, audit needs.
-- `docs/adr/`: one short Architecture Decision Record per decision below (context, decision, alternatives, consequences).
+- [`docs/NFR.md`](NFR.md): target latency per run (e.g. p95 < 3 min), availability, max cost per run, concurrent runs, data retention, audit needs.
+- [`docs/adr/`](adr/): one short Architecture Decision Record per decision below (context, decision, alternatives, consequences).
 
-**Done when:** NFRs and ADRs for the open decisions are written and agreed.
+**Done when:** NFRs are written; ADRs needed by A1–A2 (0006–0009) are accepted. Later ADRs (0010–0014) stay proposed until their step.
 
 ### A1. Project foundation
 - Python **3.12** pinned (`.python-version`); UBI images ship 3.12, local venv currently runs 3.14.
@@ -96,7 +96,7 @@ Write down what "production-ready" means before building it.
 ### A2. Service shape: API, worker, queue, authentication
 - **API** (FastAPI), versioned: `POST /v1/runs` (returns `run_id`, accepts an `Idempotency-Key`), `GET /v1/runs/{id}`, `GET /v1/runs/{id}/briefing`; `/healthz`, `/readyz`; OpenAPI spec committed; one error format.
 - **Authentication from day one:** OIDC JWT validation (Keycloak locally); the user ID is recorded on every run (needed later for entitlements and audit).
-- **Worker** as a separate process, pulling jobs from a **durable queue** (decision ADR-4); graceful shutdown; a run picked up twice does not run twice.
+- **Worker** as a separate process, pulling jobs from a **durable queue** ([ADR 0009](adr/0009-postgres-backed-job-queue.md)); graceful shutdown; a run picked up twice does not run twice.
 - Per-run limits: timeout, max LLM calls, max tokens/cost budget.
 - **Container:** UBI Python base, runs as an arbitrary non-root UID, read-only root filesystem (writes only to `/tmp`), no secrets in the image, healthcheck.
 - `docker-compose.yml`: api, worker, Postgres, Keycloak (more services added by later steps).
@@ -115,7 +115,7 @@ Write down what "production-ready" means before building it.
 ### A4. LLM gateway
 - LiteLLM proxy container; Gemini key only in its config.
 - Agents call the gateway through Pydantic AI's OpenAI-compatible provider; **per-agent model aliases** (`planner-default`, `verifier-default`) mapped to real models in the gateway.
-- Fallback chain moves into the gateway (models and order) or stays in the app (decision ADR-5); either way the model that answered is still recorded per step.
+- Fallback chain moves into the gateway (models and order) or stays in the app ([ADR 0010](adr/0010-model-fallback-in-gateway.md)); either way the model that answered is still recorded per step.
 - Timeouts, retries with backoff on 429/5xx, and a circuit breaker so a gateway outage fails fast.
 - Policy: in `stage`/`prod`, refuse to publish if a critical step (Synthesiser, Verifier) ran on a fallback model (setting, default on).
 
@@ -131,7 +131,7 @@ Write down what "production-ready" means before building it.
 ### A6. Evaluation harness and baseline
 Comes **before** any change that can affect answer quality (A7–A9, model changes).
 - Versioned golden set in `eval/`: questions with expected findings, expected disagreements (e.g. orderbook 7% vs 10%), expected gaps (ship financing), and injection cases (S12).
-- Deterministic checks (gaps reported, injection ignored, no invented quotes) plus LLM-as-judge metrics (decision ADR-7: e.g. Ragas, DeepEval or promptfoo).
+- Deterministic checks (gaps reported, injection ignored, no invented quotes) plus LLM-as-judge metrics ([ADR 0012](adr/0012-evaluation-framework.md)).
 - `make eval` produces a scored report; the current pipeline's score is committed as the **baseline**.
 
 **Done when:** a baseline report exists and a deliberately broken prompt makes `make eval` fail.
@@ -152,7 +152,7 @@ Comes **before** any change that can affect answer quality (A7–A9, model chang
 **Done when:** BM25 removed; a user without access to a document never sees it in claims or briefing; `make eval` not worse than baseline.
 
 ### A9. Guardrails and session memory
-- Input and output guardrails (decision ADR-8), PII detection (e.g. Presidio) before text reaches the LLM or logs.
+- Input and output guardrails ([ADR 0013](adr/0013-guardrails.md)), PII detection (e.g. Presidio) before text reaches the LLM or logs.
 - Session memory: follow-up questions on a run ("dig into point 3"), stored per user and session via the LangGraph thread; no unreviewed long-term model memory.
 
 **Done when:** guardrail and PII test cases pass in `make eval`; follow-up questions work through the API.
@@ -180,24 +180,21 @@ Comes **before** any change that can affect answer quality (A7–A9, model chang
 
 ## Decisions
 
-### Made
-| # | Decision | Date |
-|---|---|---|
-| D1 | Same repo; `main` is the production line; take-home frozen on branch `take-home` + tag `v0.1.0-takehome` | 2026-10-14 |
-| D2 | Our service never holds LLM provider keys; it calls an enterprise LLM gateway with its own scoped credential | 2026-10-14 |
-| D3 | Pydantic AI inside each agent (typed contracts, validation retry); LangGraph for orchestration (checkpoints, approval, resume) | 2026-10-14 |
-| D4 | Phases: A application (local, same tech as prod) → B infrastructure → C wiring; environment differences are configuration only | 2026-10-15 |
-| D5 | Generic Jenkins / Helm / Vault templates, to be adapted to organisation conventions | 2026-10-14 |
+All decisions are Architecture Decision Records in [`adr/`](adr/README.md), with status, alternatives and consequences.
 
-### Open (one ADR each, decided at the step that needs it)
-| ADR | Question | Needed by | Leaning |
+| ADR | Decision | Status | Needed by |
 |---|---|---|---|
-| ADR-1 | Package manager | A1 | uv |
-| ADR-2 | Settings and secrets loading | A1 | pydantic-settings, env vars only |
-| ADR-3 | Identity provider locally | A2 | Keycloak |
-| ADR-4 | Job queue for the worker | A2 | Postgres-backed queue (no extra broker); RabbitMQ/Kafka if the organisation standardises on one |
-| ADR-5 | Fallback chain in gateway or app | A4 | gateway, app still records the answering model |
-| ADR-6 | Tracing backend | A5 | Langfuse via OpenTelemetry |
-| ADR-7 | Evaluation framework | A6 | promptfoo or DeepEval, plus our deterministic checks |
-| ADR-8 | Guardrail service | A9 | to evaluate: Guardrails AI, NeMo Guardrails, cloud provider guardrails |
-| ADR-9 | Embedding model and reranker | A8 | via the gateway, to evaluate on the golden set |
+| 0001 | Same repo; `main` is the production line; take-home frozen on a tag | Accepted | — |
+| 0002 | LLMs only through an enterprise gateway; no provider keys in this service | Accepted | — |
+| 0003 | Pydantic AI inside agents, LangGraph for orchestration | Accepted | — |
+| 0004 | Local-first on production technologies; environments differ only by configuration | Accepted | — |
+| 0005 | Generic Jenkins / Helm / Vault templates | Accepted | — |
+| 0006 | uv for dependencies | Accepted | A1 |
+| 0007 | One validated settings object from the environment | Accepted | A1 |
+| 0008 | OIDC authentication; Keycloak locally | Accepted | A2 |
+| 0009 | Postgres-backed job queue | Accepted | A2 |
+| 0010 | Model fallback in the gateway | Proposed | A4 |
+| 0011 | OpenTelemetry tracing, Langfuse | Proposed | A5 |
+| 0012 | Deterministic checks plus DeepEval | Proposed | A6 |
+| 0013 | Guardrails at the gateway, Presidio for PII | Proposed | A9 |
+| 0014 | Embeddings and reranker chosen by evaluation | Proposed | A8 |
