@@ -7,6 +7,7 @@ The output is written for a non-technical analyst and is explicit about what it 
 - **Example outputs:** [`examples/`](examples/) — a full briefing, and a question the corpus cannot answer.
 - **Deeper design notes:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - **Production readiness** (2–4 million customers a day): [`docs/PRODUCTION_PLAN.md`](docs/PRODUCTION_PLAN.md) — capacity, observability, security and governance, operations, requirements and ADRs.
+- **Engineering briefing:** [`docs/ENGINEERING_BRIEFING.html`](docs/ENGINEERING_BRIEFING.html) — one-page overview for new engineers, design reviewers and on-call: the evidence rules in plain English, scale, observability, governance, CI/CD, testing and failure modes.
 
 ---
 
