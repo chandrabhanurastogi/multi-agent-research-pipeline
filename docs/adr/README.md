@@ -20,6 +20,7 @@ One file per significant decision: the context, what we decided, what we rejecte
 | [0012](0012-evaluation-framework.md) | Evaluation: own deterministic checks plus DeepEval, run by pytest | Proposed | A6 |
 | [0013](0013-guardrails.md) | Guardrails at the gateway where offered, Presidio for PII in the app | Proposed (decide at A9) | A9 |
 | [0014](0014-embeddings-and-reranker.md) | Embedding model and reranker chosen by evaluation on the golden set | Proposed (decide at A8) | A8 |
+| [0015](0015-capacity-target.md) | Capacity target: 2–4 million customers a day | Proposed | A2, B |
 
 ## Template
 

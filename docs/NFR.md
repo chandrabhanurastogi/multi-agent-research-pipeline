@@ -6,16 +6,19 @@ What "production-ready" means for this service, as testable targets. Each requir
 
 **Baseline (v0.1.0 reference implementation, from `examples/`):** a run takes about 20 s of model time over 6–7 steps and uses about 5–10k tokens, against a 12-document corpus. A real corpus and parallel research will change both; A5 measures them.
 
+**Target load:** 2–4 million customers a day, in production within 8 weeks. Designed for a ceiling of 4 million runs a day (~139 runs/s at peak). The capacity model and its consequences are in [`CAPACITY.md`](CAPACITY.md) and [ADR 0015](adr/0015-capacity-target.md).
+
 ---
 
 ## 1. Workload and capacity
 
 | ID | Requirement | Target | Verified by | Step |
 |---|---|---|---|---|
-| CAP-1 | Concurrent runs in progress | 20 per environment, limited by gateway quota, not by pods | Load test in stage | A2, B |
-| CAP-2 | Runs per day | 500 in prod | Load test in stage | B |
+| CAP-1 | Concurrent runs in progress | ~8,300 at peak in prod at the design ceiling (Little's law: 139 runs/s × 60 s), limited by provisioned model throughput, not by pods | Load test in stage | A2, B, C |
+| CAP-2 | Runs per day | Design ceiling 4 million (2–4 million customers a day); peak 139 runs/s at 3× average; provisioned for measured demand | Load test in stage: 1 h at peak B, 15 min burst at peak C ([CAPACITY.md](CAPACITY.md)) | B, C |
 | CAP-3 | Question length | 5–1000 characters (as today) | API validation test | A2 |
 | CAP-4 | Back-pressure when quota or capacity is exhausted | Requests are queued, never dropped; API returns `202` with position, or `429` with `Retry-After` when the queue is full | Integration test | A2 |
+| CAP-5 | Fair use | Per-customer and per-channel rate limits ahead of the queue; interactive requests take priority over batch | Integration and load test | A2, B |
 
 ## 2. Latency
 
@@ -29,7 +32,7 @@ What "production-ready" means for this service, as testable targets. Each requir
 
 | ID | Requirement | Target | Verified by | Step |
 |---|---|---|---|---|
-| REL-1 | API availability | 99.5% monthly in business hours (internal analyst tool) | SLO dashboard | C |
+| REL-1 | API availability | 99.9% monthly, 24×7 (customer-facing); stateful dependencies multi-zone; at least two model regions behind the gateway | SLO dashboard | C |
 | REL-2 | No accepted run is lost | A run accepted with `202` always ends as `completed`, `failed` or `cancelled`, even if pods restart | Chaos test: kill worker mid-run | A2, A7 |
 | REL-3 | Crash recovery | A run interrupted by a crash resumes from its last finished step; finished LLM calls are not repeated | Chaos test | A7 |
 | REL-4 | Duplicate protection | The same `Idempotency-Key` returns the same run; a job delivered twice runs once | Integration test | A2 |
@@ -44,6 +47,7 @@ What "production-ready" means for this service, as testable targets. Each requir
 | COST-1 | Cost per run is measured and attributed | Every run records tokens and cost per step | Run record, Langfuse | A5 |
 | COST-2 | Budget per run | Configurable cap on LLM calls (default 15) and tokens (default 100k); exceeding it stops the run with a clear status | Integration test | A2 |
 | COST-3 | Monthly budget | Set with the gateway team; alert at 80% *(measure)* | Gateway / dashboard | B, C |
+| COST-4 | Cost per run | Target set from the stage measurement *(measure)*; reduced by model tiering per agent, provider prompt caching and an entitlement-aware result cache ([CAPACITY.md](CAPACITY.md) §4) | Run record, dashboard | A4, A6 |
 
 ## 5. Answer quality
 
@@ -60,7 +64,7 @@ What "production-ready" means for this service, as testable targets. Each requir
 
 | ID | Requirement | Target | Verified by | Step |
 |---|---|---|---|---|
-| SEC-1 | Authentication | Every API call requires a valid OIDC token; health endpoints excepted | API tests | A2 |
+| SEC-1 | Authentication | Every API call requires a valid OIDC token (customer identity platform for customers, corporate identity provider for staff) and identifies the calling service; health endpoints excepted ([SECURITY_AND_GOVERNANCE.md](SECURITY_AND_GOVERNANCE.md)) | API tests | A2 |
 | SEC-2 | Authorisation | A user can read only their own runs (or their team's, if configured) | API tests | A2 |
 | SEC-3 | Document entitlements | Search returns only documents the user's groups may see; filter applied inside the search query | Entitlement tests | A8 |
 | SEC-4 | Secrets | No secret in code, image, logs or ConfigMaps; secrets from Vault in clusters; provider LLM keys never in this service | `gitleaks`, image scan, review | A1, A4, B |
@@ -75,7 +79,7 @@ What "production-ready" means for this service, as testable targets. Each requir
 | ID | Requirement | Target | Verified by | Step |
 |---|---|---|---|---|
 | DATA-1 | Audit trail per run | Who asked, when, question, plan, sources used, models and prompt versions per step, verdicts, scores, final briefing | Run record schema test | A3 |
-| DATA-2 | Retention | Run records 1 year, artifacts 90 days, then deleted *(agree with compliance)* | Scheduled job test | A3 |
+| DATA-2 | Retention | Run summaries 1 year in day-partitioned Postgres tables (old partitions dropped); full artifacts 90 days in object storage via lifecycle rules *(agree with compliance)* | Scheduled job test | A3 |
 | DATA-3 | Model data usage | Only models approved by the gateway team, under terms that exclude training on our data | Gateway onboarding | B |
 | DATA-4 | Data residency | Data and model calls stay in the approved region *(agree with compliance)* | Gateway / platform config | B |
 | DATA-5 | Logs | No question text, document text or prompts in logs by default; logs carry IDs only | Log review test | A1 |
@@ -84,7 +88,7 @@ What "production-ready" means for this service, as testable targets. Each requir
 
 | ID | Requirement | Target | Verified by | Step |
 |---|---|---|---|---|
-| OBS-1 | Tracing | One trace per run, a span per step and per LLM call; trace ID in API responses and logs | Manual check in Langfuse | A5 |
+| OBS-1 | Tracing | One trace per run, a span per step and per LLM call; trace ID in API responses and logs; tail-sampled: 100% of failed, degraded, slow and fallback runs, a small share of the rest ([OBSERVABILITY.md](OBSERVABILITY.md)) | Manual check in Langfuse | A5 |
 | OBS-2 | Metrics | Runs by status, duration, tokens, cost, fallback rate, trust-boundary rejection rate, unverified rate | Dashboard | A5 |
 | OBS-3 | Alerts | Failure rate, p95 latency, fallback rate, quota, cost against budget | Alert rules | C |
 | OBS-4 | Logs | Structured JSON to stdout with `run_id` and trace ID on every line | Log format test | A1 |

@@ -4,6 +4,9 @@ How the v0.1.0 reference implementation becomes a production service. This is th
 
 - **Reference implementation (baseline):** tag `v0.1.0`.
 - **Production line:** `main`.
+- **Target:** 2–4 million customers a day, in production within 8 weeks ([CAPACITY.md](CAPACITY.md), [ADR 0015](adr/0015-capacity-target.md)). See the [launch plan](#launch-plan-8-weeks).
+
+**Related documents:** [NFR.md](NFR.md) · [CAPACITY.md](CAPACITY.md) · [OBSERVABILITY.md](OBSERVABILITY.md) · [SECURITY_AND_GOVERNANCE.md](SECURITY_AND_GOVERNANCE.md) · [OPERATIONS.md](OPERATIONS.md) · [AI_ASSISTED_DEVELOPMENT.md](AI_ASSISTED_DEVELOPMENT.md) · [adr/](adr/README.md)
 
 ---
 
@@ -178,6 +181,27 @@ Comes **before** any change that can affect answer quality (A7–A9, model chang
 
 ---
 
+## Launch plan (8 weeks)
+
+Phases A, B and C run as **parallel streams**, not in sequence. The critical path is outside this repository: model throughput, identity onboarding and the security review all depend on other teams, so they are requested in week 1.
+
+| Week | Application (A) | Infrastructure (B) | Other teams / gates |
+|---|---|---|---|
+| 1 | A1 foundation; start golden set (A6) | Namespaces, registry, Jenkins skeleton | Request: model throughput at gateway (peak B, path to C), OIDC clients, Postgres / object storage / OpenSearch, Langfuse project; start threat model |
+| 2 | A2 API, worker, queue, auth, rate limits; A4 gateway client | Hello image through dev → sit → stage → prod | Gateway aliases and budget confirmed |
+| 3 | A3 persistence (partitioned); A5 observability; A6 baseline committed | Helm chart, Vault paths, NetworkPolicy, HPA on queue depth | Eval gate live in CI |
+| 4 | A7 LangGraph checkpoints, parallel researchers; A8 ingestion with entitlements (keyword search in OpenSearch first) | Collector with tail sampling; dashboards; alerts | Entitlement tests pass |
+| 5 | Model tiering and result cache, chosen by eval; PII masking | Phase C: wire sit and stage | **Gate:** security review and pen test started; load test at peak B |
+| 6 | Fixes from load and security findings | Multi-zone checks; restore and rollback drills | **Gate:** burst to peak C; chaos tests; runbook and on-call ready |
+| 7 | — | Prod deploy, shadow mode | **Gate:** compliance sign-off on audit and retention; shadow results reviewed |
+| 8 | — | Canary 1% → 5% → 25% → 100% | **Gate per step:** SLOs, quality metrics, cost per run in bounds |
+
+**Deferred until after launch unless evaluation requires them:** session memory (A9), plan-approval interrupt (A7), vector search and reranker (A8; keyword search ships first if the golden set shows it is good enough).
+
+**Launch gates (all required):** load test passed at peak B with a 15-minute burst to peak C; evaluation at or above baseline; security checklist complete ([SECURITY_AND_GOVERNANCE.md](SECURITY_AND_GOVERNANCE.md) §10); on-call readiness complete ([OPERATIONS.md](OPERATIONS.md) §6); model throughput contract in place.
+
+---
+
 ## Decisions
 
 All decisions are Architecture Decision Records in [`adr/`](adr/README.md), with status, alternatives and consequences.
@@ -198,3 +222,4 @@ All decisions are Architecture Decision Records in [`adr/`](adr/README.md), with
 | 0012 | Deterministic checks plus DeepEval | Proposed | A6 |
 | 0013 | Guardrails at the gateway, Presidio for PII | Proposed | A9 |
 | 0014 | Embeddings and reranker chosen by evaluation | Proposed | A8 |
+| 0015 | Capacity target: 2–4 million customers a day | Proposed | A2, B |
